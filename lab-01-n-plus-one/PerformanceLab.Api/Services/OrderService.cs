@@ -7,52 +7,83 @@ namespace PerformanceLab.Api.Services;
 
 public sealed class OrderService(PerformanceLabDbContext dbContext) : IOrderService
 {
-    public async Task<IReadOnlyList<OrderDto>> GetRecentOrdersAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<OrderDto>> GetRecentOrdersAsync(
+        CancellationToken cancellationToken)
     {
-        var availableOrders = await dbContext.Orders
+        var orders = await dbContext.Orders
+            .AsNoTracking()
             .Where(order => order.Status != OrderStatus.Cancelled)
+            .OrderByDescending(order => order.CreatedAt)
+            .ThenByDescending(order => order.Id)
+            .Take(100)
+            .Select(order => new
+            {
+                order.Id,
+                order.OrderNumber,
+                order.CreatedAt,
+                order.Status,
+                order.ShippingAddress,
+                CustomerId = order.Customer.Id,
+                CustomerName = order.Customer.FirstName + " " + order.Customer.LastName,
+                CustomerEmail = order.Customer.Email,
+                CustomerCity = order.Customer.City,
+                CustomerOrderCount = order.Customer.Orders.Count
+            })
             .ToListAsync(cancellationToken);
 
-        var selectedOrders = availableOrders
-            .OrderByDescending(order => order.CreatedAt)
-            .Take(100)
-            .ToList();
-
-        var result = new List<OrderDto>(selectedOrders.Count);
-
-        foreach (var order in selectedOrders)
+        if (orders.Count == 0)
         {
-            var customer = await dbContext.Customers
-                .SingleAsync(value => value.Id == order.CustomerId, cancellationToken);
+            return [];
+        }
 
-            var customerOrderCount = await dbContext.Orders
-                .CountAsync(value => value.CustomerId == customer.Id, cancellationToken);
+        var orderIds = orders.Select(order => order.Id).ToArray();
+        var items = await dbContext.OrderItems
+            .AsNoTracking()
+            .Where(item => orderIds.Contains(item.OrderId))
+            .OrderBy(item => item.Id)
+            .Select(item => new
+            {
+                item.OrderId,
+                item.Id,
+                item.Quantity,
+                item.UnitPrice,
+                item.DiscountPercent,
+                ProductId = item.Product.Id,
+                ProductSku = item.Product.Sku,
+                ProductName = item.Product.Name,
+                ProductCategory = item.Product.Category
+            })
+            .ToListAsync(cancellationToken);
 
-            var orderItems = await dbContext.OrderItems
-                .Where(item => item.OrderId == order.Id)
-                .ToListAsync(cancellationToken);
+        var itemsByOrder = items.ToLookup(item => item.OrderId);
+        var result = new List<OrderDto>(orders.Count);
 
-            var itemDtos = new List<OrderItemDto>(orderItems.Count);
+        foreach (var order in orders)
+        {
+            var orderItems = itemsByOrder[order.Id];
+            var itemDtos = new List<OrderItemDto>();
+            var subtotal = 0m;
+            var discountTotal = 0m;
+
             foreach (var item in orderItems)
             {
-                var product = await dbContext.Products
-                    .SingleAsync(value => value.Id == item.ProductId, cancellationToken);
-
                 var gross = item.UnitPrice * item.Quantity;
                 var discount = gross * item.DiscountPercent / 100m;
+
+                subtotal += gross;
+                discountTotal += discount;
                 itemDtos.Add(new OrderItemDto(
                     item.Id,
                     item.Quantity,
                     item.UnitPrice,
                     item.DiscountPercent,
                     gross - discount,
-                    new ProductDto(product.Id, product.Sku, product.Name, product.Category)));
+                    new ProductDto(
+                        item.ProductId,
+                        item.ProductSku,
+                        item.ProductName,
+                        item.ProductCategory)));
             }
-
-            var subtotal = orderItems.Sum(item => item.UnitPrice * item.Quantity);
-            var discountTotal = orderItems.Sum(item =>
-                item.UnitPrice * item.Quantity * item.DiscountPercent / 100m);
-            var total = itemDtos.Select(item => item.LineTotal).Sum();
 
             result.Add(new OrderDto(
                 order.Id,
@@ -61,15 +92,15 @@ public sealed class OrderService(PerformanceLabDbContext dbContext) : IOrderServ
                 order.Status.ToString(),
                 order.ShippingAddress,
                 new CustomerDto(
-                    customer.Id,
-                    $"{customer.FirstName} {customer.LastName}",
-                    customer.Email,
-                    customer.City,
-                    customerOrderCount),
+                    order.CustomerId,
+                    order.CustomerName,
+                    order.CustomerEmail,
+                    order.CustomerCity,
+                    order.CustomerOrderCount),
                 itemDtos,
                 subtotal,
                 discountTotal,
-                total));
+                subtotal - discountTotal));
         }
 
         return result;
