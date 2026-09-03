@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PerformanceLab.Api.Data;
+using PerformanceLab.Api.Diagnostics;
+using PerformanceLab.Api.Middleware;
 using PerformanceLab.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,9 +10,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IOrderService, OrderService>();
-builder.Services.AddDbContext<PerformanceLabDbContext>(options =>
+builder.Services.AddScoped<QueryCounter>();
+builder.Services.AddScoped<QueryCountingInterceptor>();
+builder.Services.AddDbContext<PerformanceLabDbContext>((serviceProvider, options) =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("PerformanceLab"));
+    options.AddInterceptors(serviceProvider.GetRequiredService<QueryCountingInterceptor>());
     options.EnableDetailedErrors();
 
     if (builder.Environment.IsDevelopment())
@@ -30,6 +35,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseMiddleware<QueryCountMiddleware>();
 app.MapControllers();
 
 app.Run();
