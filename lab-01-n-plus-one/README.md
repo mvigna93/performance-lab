@@ -1,36 +1,33 @@
-# Lab 01 — N+1 Query Problem in ASP.NET Core
+# Lab 01 — Order API
 
-## Goal
+An ASP.NET Core and PostgreSQL order-management API for performance investigation. The orders endpoint returns 100 recent non-cancelled orders with customer details, line items, product details, and calculated totals.
 
-Investigate how an N+1 database query problem affects API latency and throughput.
+## Prerequisites
 
-## Scenario
+- .NET 9 SDK
+- Docker Desktop, or a PostgreSQL instance available on port 5432
 
-An ASP.NET Core API exposes an endpoint that returns orders together with customer and order-item information.
+## Run
 
-The initial implementation will intentionally generate unnecessary database queries.
+From `lab-01-n-plus-one`:
 
-## Metrics
+```powershell
+docker compose up -d
+dotnet run --project .\PerformanceLab.Api\PerformanceLab.Api.csproj --launch-profile http
+```
 
-- Average latency
-- p95 latency
-- p99 latency
-- Throughput
-- Number of database queries per request
+In Development, the application applies its EF Core migration and seeds the database on the first startup. Initial seeding creates 500 customers, 5,000 products, 10,000 orders, and multiple items for each order, so the first launch can take a little longer.
 
-## Experiment
+Open:
 
-1. Build the intentionally inefficient implementation.
-2. Establish a performance baseline.
-3. Inspect database activity.
-4. Identify the bottleneck.
-5. Optimize the implementation.
-6. Run the same workload again.
-7. Compare the results.
+- Swagger UI: `http://localhost:5247/swagger`
+- Orders: `http://localhost:5247/api/orders`
+- Health: `http://localhost:5247/health`
 
-## Stack
+The default connection string is in `PerformanceLab.Api/appsettings.json`. Override `ConnectionStrings__PerformanceLab` to use another PostgreSQL instance.
 
-- ASP.NET Core
-- Entity Framework Core
-- PostgreSQL
-- k6
+## Build
+
+```powershell
+dotnet build .\PerformanceLab.sln
+```

@@ -1,0 +1,9 @@
+@PerformanceLab.Api_HostAddress = http://localhost:5247
+
+GET {{PerformanceLab.Api_HostAddress}}/health
+Accept: application/json
+
+###
+
+GET {{PerformanceLab.Api_HostAddress}}/api/orders
+Accept: application/json
