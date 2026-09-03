@@ -31,3 +31,4 @@ The default connection string is in `PerformanceLab.Api/appsettings.json`. Overr
 ```powershell
 dotnet build .\PerformanceLab.sln
 ```
+To create a basic txt file with results, execute this command: k6 run .\k6\orders-baseline.js | Tee-Object .\results\nameYouWish.txt
