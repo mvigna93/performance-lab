@@ -10,7 +10,7 @@ The goal of this repository is to investigate performance problems using a measu
 
 | Lab | Topic | Status |
 | --- | --- | --- |
-| [Lab 01](./lab-01-n-plus-one) | ASP.NET Core + EF Core N+1 query problem | Planned |
+| [Lab 01](./lab-01-n-plus-one) | ASP.NET Core + EF Core N+1 query problem | Done |
 
 ## Topics
 

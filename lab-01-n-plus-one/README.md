@@ -16,6 +16,14 @@ docker compose up -d
 dotnet run --project .\PerformanceLab.Api\PerformanceLab.Api.csproj --launch-profile http
 ```
 
+To create a basic txt file with results, execute this command to run k6
+
+```powershell
+k6 run .\k6\orders-baseline.js | Tee-Object .\results\nameYouWish.txt
+```
+
+At the same time execute the request from the swagger.
+
 In Development, the application applies its EF Core migration and seeds the database on the first startup. Initial seeding creates 500 customers, 5,000 products, 10,000 orders, and multiple items for each order, so the first launch can take a little longer.
 
 Open:
