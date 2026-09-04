@@ -1,0 +1,20 @@
+name: performance-lab-02
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: performance_lab_02
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d performance_lab_02"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  postgres-data:
