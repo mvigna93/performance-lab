@@ -1,0 +1,13 @@
+Limit  (cost=375.56..375.76 rows=80 width=31) (actual time=26.143..26.151 rows=80 loops=1)
+  ->  Sort  (cost=375.56..375.76 rows=80 width=31) (actual time=26.142..26.145 rows=80 loops=1)
+        Sort Key: "CreatedAt" DESC
+        Sort Method: quicksort  Memory: 30kB
+        ->  Bitmap Heap Scan on "Orders" o  (cost=5.19..373.03 rows=80 width=31) (actual time=1.109..26.050 rows=80 loops=1)
+              Recheck Cond: ("CustomerId" = 9)
+              Filter: (("Status")::text <> 'Cancelled'::text)
+              Rows Removed by Filter: 20
+              Heap Blocks: exact=100
+              ->  Bitmap Index Scan on idx_orders_customer_created_at  (cost=0.00..5.17 rows=100 width=0) (actual time=0.766..0.767 rows=100 loops=1)
+                    Index Cond: ("CustomerId" = 9)
+Planning Time: 2.155 ms
+Execution Time: 26.250 ms

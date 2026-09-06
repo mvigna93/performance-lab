@@ -1,0 +1,14 @@
+Limit  (cost=15192.86..15200.56 rows=66 width=31) (actual time=194.545..196.734 rows=80 loops=1)
+  ->  Gather Merge  (cost=15192.86..15200.56 rows=66 width=31) (actual time=194.543..196.728 rows=80 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        ->  Sort  (cost=14192.83..14192.91 rows=33 width=31) (actual time=190.338..190.340 rows=27 loops=3)
+              Sort Key: "CreatedAt" DESC
+              Sort Method: quicksort  Memory: 26kB
+              Worker 0:  Sort Method: quicksort  Memory: 27kB
+              Worker 1:  Sort Method: quicksort  Memory: 26kB
+              ->  Parallel Seq Scan on "Orders" o  (cost=0.00..14192.00 rows=33 width=31) (actual time=4.177..190.048 rows=27 loops=3)
+                    Filter: ((("Status")::text <> 'Cancelled'::text) AND ("CustomerId" = 9))
+                    Rows Removed by Filter: 333307
+Planning Time: 1.866 ms
+Execution Time: 196.870 ms

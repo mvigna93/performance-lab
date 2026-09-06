@@ -31,6 +31,9 @@ public sealed class PerformanceLabDbContext(DbContextOptions<PerformanceLabDbCon
             entity.HasKey(order => order.Id);
             entity.Property(order => order.Status).HasConversion<string>().HasMaxLength(30);
             entity.Property(order => order.Total).HasPrecision(12, 2);
+            entity.HasIndex(order => new { order.CustomerId, order.CreatedAt })
+                .HasDatabaseName("idx_orders_customer_created_at")
+                .IsDescending(false, true);
             entity.HasOne<Customer>()
                 .WithMany()
                 .HasForeignKey(order => order.CustomerId)
