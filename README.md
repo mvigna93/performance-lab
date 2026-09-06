@@ -11,6 +11,7 @@ The goal of this repository is to investigate performance problems using a measu
 | Lab | Topic | Status |
 | --- | --- | --- |
 | [Lab 01](./lab-01-n-plus-one) | ASP.NET Core + EF Core N+1 query problem | Done |
+| [Lab 02](./lab-02-missing-index) | ASP.NET Core + EF Core missing index problem | In Progress |
 
 ## Topics
 
